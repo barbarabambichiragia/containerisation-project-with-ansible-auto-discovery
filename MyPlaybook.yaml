@@ -1,0 +1,39 @@
+---
+- hosts: webservers
+  become: true
+  vars:
+    create_containers: 1
+    default_container_name: my-app
+    default_container_image: cloudhight/pipeline:1.0.0
+    default_container_command: sleep 1d
+    default_container_port: 8085
+    defaul_host_port: 8080
+
+  tasks:
+   - name: login to dockerhub
+     command: docker login -u cloudhight -p CloudHight_Admin123@
+
+   - name: Stop any container running
+     command: docker stop pet-adoption-container
+     ignore_errors: yes
+
+   - name: Remove stopped container
+     command: docker rm pet-adoption-container
+     ignore_errors: yes
+
+   - name: Remove docker image
+     command: docker rmi cloudhight/pipeline:1.0.0
+     ignore_errors: yes
+     
+   - name: Pull default Docker image
+     docker_image:
+      name: \"{{ default_container_image }}\"
+      source: pull
+
+   - name: Restart a container
+     docker_container:
+      name: pet-adoption-container
+      image: cloudhight/pipeline:1.0.0
+      state: started
+      ports: 
+      - "8080:8085"
